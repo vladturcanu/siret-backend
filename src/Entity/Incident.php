@@ -32,15 +32,20 @@ class Incident
     private $recorded_date;
 
     /**
-     * @ORM\Column(type="boolean")
-     */
-    private $is_closed;
-
-    /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Account", inversedBy="incidents")
      * @ORM\JoinColumn(nullable=true)
      */
     private $reporter;
+
+    /**
+     * @ORM\Column(type="string", length=2048, nullable=true)
+     */
+    private $details;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $status;
 
     public function getId(): ?int
     {
@@ -83,18 +88,6 @@ class Incident
         return $this;
     }
 
-    public function getIsClosed(): ?bool
-    {
-        return $this->is_closed;
-    }
-
-    public function setIsClosed(bool $is_closed): self
-    {
-        $this->is_closed = $is_closed;
-
-        return $this;
-    }
-
     public function getReporter(): ?Account
     {
         return $this->reporter;
@@ -103,6 +96,30 @@ class Incident
     public function setReporter(?Account $reporter): self
     {
         $this->reporter = $reporter;
+
+        return $this;
+    }
+
+    public function getDetails(): ?string
+    {
+        return $this->details;
+    }
+
+    public function setDetails(?string $details): self
+    {
+        $this->details = $details;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
 
         return $this;
     }

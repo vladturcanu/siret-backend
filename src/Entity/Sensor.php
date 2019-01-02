@@ -33,6 +33,11 @@ class Sensor
      */
     private $data;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $token;
+
     public function __construct()
     {
         $this->data = new ArrayCollection();
@@ -94,6 +99,18 @@ class Sensor
                 $data->setSensor(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+
+    public function setToken(string $token): self
+    {
+        $this->token = $token;
 
         return $this;
     }

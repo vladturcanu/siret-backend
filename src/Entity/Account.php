@@ -58,6 +58,16 @@ class Account
      */
     private $incidents;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $token;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $is_valid = FALSE;
+
     public function __construct()
     {
         $this->incidents = new ArrayCollection();
@@ -179,6 +189,30 @@ class Account
                 $incident->setReporter(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+
+    public function setToken(?string $token): self
+    {
+        $this->token = $token;
+
+        return $this;
+    }
+
+    public function getIsValid(): ?bool
+    {
+        return $this->is_valid;
+    }
+
+    public function setIsValid(bool $is_valid): self
+    {
+        $this->is_valid = $is_valid;
 
         return $this;
     }
