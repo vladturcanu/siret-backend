@@ -140,7 +140,7 @@ class AccountController extends AbstractController
         $username = $jsr->getArrayKey('username', $parameters);
         $password = $jsr->getArrayKey('password', $parameters);
 
-        /* Test username, email, password, type not empty */
+        /* Test username, password not empty */
         if (!$username) {
             return $this->json([
                 'error' => 'No username supplied'
@@ -175,6 +175,68 @@ class AccountController extends AbstractController
             $em->flush();
 
             return $this->json([
+                'username' => $username,
+                'token' => $token,
+                'type' => $user->getType(),
+                'is_valid' => $user->getIsValid()
+            ]);
+        } else {
+            return $this->json([
+                'error' => 'Wrong username or password. Try again!'
+            ]);
+        }
+    }
+
+    /**
+     * @Route("/login_form", name="login_form")
+     * @Route("/login_form/", name="login_form2")
+     * 
+     * Receives params from a form instead of JSON.
+     * Params: username, password
+     */
+    public function login_form(EntityManagerInterface $em)
+    {
+        $request = Request::createFromGlobals();
+
+        $username = $request->request->get("username");
+        $password = $request->request->get("password");
+
+        /* Test username, password not empty */
+        if (!$username) {
+            return $this->json([
+                'error' => 'No username supplied'
+            ]);
+        }
+        if (!$password) {
+            return $this->json([
+                'error' => 'No password supplied'
+            ]);
+        }
+
+        /* Find username + password combination in database */
+        $user_repo = $this->getDoctrine()->getRepository(Account::class);
+        $user = $user_repo->findOneBy([
+            'username' => $username
+        ]);
+
+        if ($user) {
+            /* Test matching password */
+            if (!password_verify($password, $user->getPassword())) {
+                return $this->json([
+                    'error' => 'Wrong username or password. Try again!'
+                ]);
+            }
+
+            /* Generate token for the user */
+            $token = TokenGenerator::generateRandomString();
+
+            /* Insert token into the database */
+            $user->setToken($token);
+            $em->persist($user);
+            $em->flush();
+
+            return $this->json([
+                'username' => $username,
                 'token' => $token,
                 'type' => $user->getType(),
                 'is_valid' => $user->getIsValid()
