@@ -174,11 +174,18 @@ class AccountController extends AbstractController
             $em->persist($user);
             $em->flush();
 
+            $is_valid = "";
+            if ($user->getIsValid()) {
+                $is_valid = "true";
+            } else {
+                $is_valid = "false";
+            }
+
             return $this->json([
                 'username' => $username,
                 'token' => $token,
                 'type' => $user->getType(),
-                'is_valid' => $user->getIsValid()
+                'is_valid' => $is_valid
             ]);
         } else {
             return $this->json([
