@@ -81,9 +81,6 @@ class DataController extends AbstractController
      */
     public function get_data(EntityManagerInterface $em)
     {
-        $request = Request::createFromGlobals();
-        $jsr = new JsonRequestService();
-
         $data_repo = $this->getDoctrine()->getRepository(Data::class);
         $all_data = $data_repo->findAll();
 
