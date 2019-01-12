@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Service\TokenGenerator;
 use App\Entity\Sensor;
-use App\Entity\Data;
 use App\Service\JsonRequestService;
 
 class SensorController extends AbstractController
@@ -124,15 +123,11 @@ class SensorController extends AbstractController
      */
     public function get_sensors(EntityManagerInterface $em)
     {
-        $data_repo = $this->getDoctrine()->getRepository(Data::class);
         $sensor_repo = $this->getDoctrine()->getRepository(Sensor::class);
         $all_sensors = $sensor_repo->findAll();
 
         $response = [];
         foreach ($all_sensors as $sensor) {
-            $data_repo->findBy([
-                "sensor_id" => $sensor->getId
-            ]);
 
             $response_row = [
                 "id" => $sensor->getId(),
