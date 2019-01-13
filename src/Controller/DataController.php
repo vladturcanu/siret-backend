@@ -101,4 +101,74 @@ class DataController extends AbstractController
 
         return $this->json($response);
     }
+
+
+    /**
+     * @Route("/get_sensor_data", name="get_sensor_data")
+     * @Route("/get_sensor_data/", name="get_sensor_data/")
+     * 
+     * Parameters:
+     *      - parameter (measured parameter of the sensor),
+     *      - location (location of the sensor)
+     */
+    public function get_sensor_data(EntityManagerInterface $em)
+    {
+        /* Get parameters from request */
+        $request = Request::createFromGlobals();
+        $jsr = new JsonRequestService();
+
+        $parameters = $jsr->getRequestBody($request);
+        if ($parameters === FALSE) {
+            return $this->json([
+                'error' => 'Empty or invalid request body.'
+            ]);
+        }
+
+        $parameter = $jsr->getArrayKey('parameter', $parameters);
+        $location = $jsr->getArrayKey('location', $parameters);
+
+        if (!$parameter) {
+            return $this->json([
+                'error' => 'No parameter supplied'
+            ]);
+        }
+
+        if (!$location) {
+            return $this->json([
+                'error' => 'No location supplied'
+            ]);
+        }
+
+        /* Find requested data from database */
+        $data_repo = $this->getDoctrine()->getRepository(Data::class);
+        $sensor_repo = $this->getDoctrine()->getRepository(Sensor::class);
+
+        $sensor = $sensor_repo->findOneBy([
+            "parameter" => $parameter,
+            "location" => $location
+        ]);
+
+        if (!$sensor) {
+            return $this->json([
+                'error' => 'No sensor found for specified parameter and location'
+            ]);
+        }
+
+        $all_data = $sensor->getData();
+
+        /* Build JSON response */
+        $response = [];
+        foreach ($all_data as $data) {
+            $sensor = $data->getSensor();
+
+            $data_details = [
+                "value" => $data->getValue(),
+                "timestamp" => $data->getTimestamp()
+            ];
+
+            array_push($response, $data_details);
+        }
+
+        return $this->json($response);
+    }
 }
