@@ -7,9 +7,12 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Service\TokenGenerator;
+use App\Service\MailSender;
 use App\Entity\Sensor;
 use App\Entity\Data;
 use App\Service\JsonRequestService;
+use App\Entity\Account;
+use Psr\Log\LoggerInterface;
 
 class DataController extends AbstractController
 {
@@ -19,7 +22,7 @@ class DataController extends AbstractController
      * 
      * Parameters: value, token (sensor token)
      */
-    public function add_data(EntityManagerInterface $em)
+    public function add_data(EntityManagerInterface $em, LoggerInterface $logger)
     {
         $request = Request::createFromGlobals();
         $jsr = new JsonRequestService();
@@ -58,6 +61,35 @@ class DataController extends AbstractController
             ]);
         }
 
+        $location = $sensor->getLocation();
+        $parameter = $sensor->getParameter();
+
+        $msg = "";
+        /* If data is beyond safety treshold, send mail to admins */
+        if (($parameter == "ph" && intval($value) > 8) ||
+            ($parameter == "turbiditate" && intval($value) > 10)) {
+
+            $user_repo = $this->getDoctrine()->getRepository(Account::class);
+            $admins = $user_repo->findBy([
+                "type" => "admin"
+            ]);
+
+            if ($parameter == "ph" && intval($value) > 8) {
+                $subject = "Siret - Dangerous pH levels";
+                $message = "Sensors have measured a dangerous pH value in the Siret river, near $location.\nThe measured pH value was equal to $value";
+            } elseif ($parameter == "turbiditate" && intval($value) > 10) {
+                $subject = "Siret - Dangerous turbidity levels";
+                $message = "Sensors have measured a dangerous turbidity value in the Siret river, near $location.\nThe measured turbidity was equal to $value NTU";
+            }
+
+            $recipientArray = [];
+            foreach ($admins as $admin) {
+                array_push($recipientArray, $admin->getEmail());
+            }
+
+            $msg = MailSender::sendMail($recipientArray, $subject, $message);
+        }
+
         /* Add data to database */
         $data = new Data();
         $data->setValue($value);
@@ -68,7 +100,7 @@ class DataController extends AbstractController
         $em->flush();
 
         return $this->json([
-            'message' => 'Data added successfully!'
+            'message' => $msg
         ]);
     }
 
