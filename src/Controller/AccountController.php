@@ -103,6 +103,12 @@ class AccountController extends AbstractController
             ]);
         }
 
+        if ($type == "admin") {
+            $is_valid = TRUE;
+        } else {
+            $is_valid = FALSE;
+        }
+
         $user->setUsername($username);
         $user->setPassword($password);
         $user->setEmail($email);
@@ -110,6 +116,7 @@ class AccountController extends AbstractController
         $user->setName($name);
         $user->setSurname($surname);
         $user->setCity($city);
+        $user->setIsValid($city);
 
         $em->persist($user);
         $em->flush();
